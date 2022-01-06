@@ -59,7 +59,7 @@ function createTable($conn = null, $tableName = "")
     return true;
   } catch (PDOException $e) {
     //http_response_code(503);
-    echo $e->getMessage();
+    echo $e->getCode();
     return false;
   }
 }
@@ -72,10 +72,10 @@ if (method_exists($conn, "getCode") && $conn->getCode() == 1049) {
   $table = createTable($conn, $DB_TABLE);
 } else if (method_exists($conn, "getCode") && $conn->getCode() == 1045) {
   http_response_code(503);
-  exit($conn->getMessage());
+  exit($conn->getCode());
 } else if (method_exists($conn, "getCode") && $conn->getCode() == 2002) {
   http_response_code(503);
-  exit($conn->getMessage());
+  exit($conn->getCode());
 }
 
 function insertPeople($conn = null, $tableName = "")
@@ -90,24 +90,33 @@ function insertPeople($conn = null, $tableName = "")
       header("Location: ./");
     } catch (PDOException $e) {
       http_response_code(503);
-      exit($e->getMessage());
+      exit($e->getCode());
+    }
+  }
+}
+
+function getPeople($conn, $dbTable){
+  try {
+    $stmt = $conn->prepare("SELECT id, name, surname, birth_date FROM $dbTable");
+    $stmt->execute();
+    if ($stmt->rowCount() > 0) {
+      $people = $stmt->fetchAll(PDO::FETCH_OBJ);
+      return $people;
+    }
+    return [];
+  } catch (PDOException $e) {
+    if (method_exists($e, "getCode") && $e->getCode() == "42S02"){
+      $table = createTable($conn, $dbTable);
+      return [];
+    }else{
+      http_response_code(503);
+      exit($e->getCode());
     }
   }
 }
 
 insertPeople($conn, $DB_TABLE);
-
-try {
-  $stmt = $conn->prepare("SELECT id, name, surname, birth_date FROM $DB_TABLE");
-  $stmt->execute();
-  if ($stmt->rowCount() > 0) {
-    $people = $stmt->fetchAll(PDO::FETCH_OBJ);
-    //var_dump($people);
-  }
-} catch (PDOException $e) {
-  http_response_code(503);
-  exit($e->getMessage());
-}
+$people = getPeople($conn, $DB_TABLE);
 ?>
 <!doctype html>
 <html lang="pt-BR">
@@ -128,7 +137,7 @@ try {
     <div class="container-fluid">
       <a class="navbar-brand" href="./">
         <img src="https://getbootstrap.com/docs/5.1/assets/brand/bootstrap-logo.svg" alt="" width="30" height="24" class="d-inline-block align-text-top">
-        Bootstrap
+        CRUD_PHP
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
