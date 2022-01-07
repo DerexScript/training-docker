@@ -1,2 +1,8 @@
-# training-docker
-training docker with a simple CRUD in php
+# training docker with php
+simple crud made with php and mysql
+
+# instructions
+- just do
+```sh
+docker-composer up -d
+```
