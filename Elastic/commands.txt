@@ -1,0 +1,21 @@
+#dockerfile
+docker build -t isaelsantos/project:1.0 .
+docker run -d -v "${PWD}/data01/:/usr/share/elasticsearch/data" -e "discovery.type=single-node" -p 9200:9200 -p 9300:9300 isaelsantos/project:1.0
+
+#docker-compose
+docker-compose up
+
+
+#annotation
+
+python /scripts/elasticPopulate.py
+
+docker run -v "${PWD}/scripts:/scripts" -e "discovery.type=single-node" -p 9200:9200 -p 9300:9300 isaelsantos/project:1.0
+
+
+sudo aa-remove-unknown
+docker container kill $(docker ps -q)
+
+
+docker network create somenetwork
+docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:tag
